@@ -1,0 +1,106 @@
+#include <stdio.h>
+
+#define N_AP 5
+#define MAX_TERMOS 90   // acima disso a soma nao cabe em 64 bits
+
+// Soma dos 'termos' primeiros termos da sequencia de Fibonacci (0, 1, 1, 2, 3, 5, ...)
+unsigned long long somaFibonacci(int termos)
+{
+    unsigned long long a = 0, b = 1, prox, soma = 0;
+    int i;
+
+    for (i = 0; i < termos; i++)
+    {
+        soma += a;
+        prox = a + b;
+        a = b;
+        b = prox;
+    }
+    return soma;
+}
+
+int ehPrimo(unsigned long long n)
+{
+    unsigned long long i;
+
+    if (n < 2)
+        return 0;
+    if (n < 4)
+        return 1;
+    if (n % 2 == 0 || n % 3 == 0)
+        return 0;
+    for (i = 5; i * i <= n; i += 6)
+    {
+        if (n % i == 0 || n % (i + 2) == 0)
+            return 0;
+    }
+    return 1;
+}
+
+int main()
+{
+    char nomes[N_AP][50];
+    int numeros[N_AP];
+    unsigned long long resultados[N_AP];
+    int premiado[N_AP] = {0, 0, 0, 0, 0};
+    int v1 = -1, v2 = -1, v3 = -1;   // indices dos vencedores (-1 = sem vencedor)
+    double media, soma = 0;
+    int i;
+
+    // Cadastro
+    for (i = 0; i < N_AP; i++)
+    {
+        printf("Nome do apostador %d: ", i + 1);
+        scanf(" %49[^\n]", nomes[i]);
+
+        do
+        {
+            printf("Numero inteiro positivo (1 a %d) de %s: ", MAX_TERMOS, nomes[i]);
+            scanf("%d", &numeros[i]);
+        } while (numeros[i] < 1 || numeros[i] > MAX_TERMOS);
+
+        resultados[i] = somaFibonacci(numeros[i]);
+        soma += (double) resultados[i];
+    }
+    media = soma / N_AP;
+
+    // 1o lugar: maior resultado PRIMO
+    for (i = 0; i < N_AP; i++)
+    {
+        if (ehPrimo(resultados[i]) && (v1 == -1 || resultados[i] > resultados[v1]))
+            v1 = i;
+    }
+    if (v1 != -1)
+        premiado[v1] = 1;
+
+    // 2o lugar: maior resultado PAR entre os nao premiados
+    for (i = 0; i < N_AP; i++)
+    {
+        if (!premiado[i] && resultados[i] % 2 == 0 && (v2 == -1 || resultados[i] > resultados[v2]))
+            v2 = i;
+    }
+    if (v2 != -1)
+        premiado[v2] = 1;
+
+    // 3o lugar: maior resultado ACIMA DA MEDIA entre os nao premiados
+    for (i = 0; i < N_AP; i++)
+    {
+        if (!premiado[i] && (double) resultados[i] > media && (v3 == -1 || resultados[i] > resultados[v3]))
+            v3 = i;
+    }
+    if (v3 != -1)
+        premiado[v3] = 1;
+
+    // Saida: somente os vencedores, do 1o ao 3o lugar
+    printf("\n===== VENCEDORES =====\n");
+    if (v1 == -1 && v2 == -1 && v3 == -1)
+        printf("Nenhum vencedor.\n");
+    if (v1 != -1)
+        printf("1o lugar: %s\n", nomes[v1]);
+    if (v2 != -1)
+        printf("2o lugar: %s\n", nomes[v2]);
+    if (v3 != -1)
+        printf("3o lugar: %s\n", nomes[v3]);
+
+    return 0;
+}
