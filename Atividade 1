@@ -1,0 +1,162 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+
+#define QTD 12
+
+typedef struct
+{
+    char nome[50];
+    float preco;
+    int quantidade;
+} Produto;
+
+// Compara dois nomes sem diferenciar maiusculas de minusculas
+int compararNomes(const char *a, const char *b)
+{
+    while (*a && *b)
+    {
+        int ca = tolower((unsigned char)*a);
+        int cb = tolower((unsigned char)*b);
+        if (ca != cb)
+            return ca - cb;
+        a++;
+        b++;
+    }
+    return tolower((unsigned char)*a) - tolower((unsigned char)*b);
+}
+
+int main()
+{
+    int v[QTD];
+    int distintos[QTD], ocorr[QTD], nDist = 0;
+    Produto produtos[QTD];
+    int nProd = 0;
+    int *pares;           // 2o vetor (dinamico): numeros com ocorrencias pares
+    int nPares = 0;
+    int i, j, achou, aux;
+    Produto tmp;
+    float totalGeral = 0;
+
+    // Leitura dos 12 numeros
+    for (i = 0; i < QTD; i++)
+    {
+        printf("Digite o numero %d: ", i + 1);
+        scanf("%d", &v[i]);
+    }
+
+    // a) Conta quantas vezes cada numero aparece
+    for (i = 0; i < QTD; i++)
+    {
+        achou = -1;
+        for (j = 0; j < nDist; j++)
+        {
+            if (distintos[j] == v[i])
+                achou = j;
+        }
+        if (achou == -1)
+        {
+            distintos[nDist] = v[i];
+            ocorr[nDist] = 1;
+            nDist++;
+        }
+        else
+        {
+            ocorr[achou]++;
+        }
+    }
+
+    pares = (int *) malloc(nDist * sizeof(int));
+    if (pares == NULL)
+    {
+        printf("Erro de memoria!\n");
+        return 1;
+    }
+
+    // b) e d) Ocorrencias IMPARES: o numero eh a quantidade a comprar -> cadastra o produto
+    printf("\n=== Cadastro dos produtos do sorteio ===\n");
+    for (j = 0; j < nDist; j++)
+    {
+        if (ocorr[j] % 2 != 0)
+        {
+            printf("\nO numero %d aparece %d vez(es) (impar): comprar %d unidade(s).\n",
+                   distintos[j], ocorr[j], distintos[j]);
+            printf("Nome do produto: ");
+            scanf(" %49[^\n]", produtos[nProd].nome);
+            printf("Preco unitario: R$ ");
+            scanf("%f", &produtos[nProd].preco);
+            produtos[nProd].quantidade = distintos[j];
+            nProd++;
+        }
+        else
+        {
+            // c) Ocorrencias PARES: vao para o segundo vetor
+            pares[nPares] = distintos[j];
+            nPares++;
+        }
+    }
+
+    // e) Produtos em ordem alfabetica (bubble sort)
+    for (i = 0; i < nProd - 1; i++)
+    {
+        for (j = 0; j < nProd - 1 - i; j++)
+        {
+            if (compararNomes(produtos[j].nome, produtos[j + 1].nome) > 0)
+            {
+                tmp = produtos[j];
+                produtos[j] = produtos[j + 1];
+                produtos[j + 1] = tmp;
+            }
+        }
+    }
+
+    // c) Segundo vetor em ordem DECRESCENTE
+    for (i = 0; i < nPares - 1; i++)
+    {
+        for (j = 0; j < nPares - 1 - i; j++)
+        {
+            if (pares[j] < pares[j + 1])
+            {
+                aux = pares[j];
+                pares[j] = pares[j + 1];
+                pares[j + 1] = aux;
+            }
+        }
+    }
+
+    // ===== Saida final =====
+    printf("\n========== RESULTADO ==========\n");
+
+    printf("\na) Numeros informados: ");
+    for (i = 0; i < QTD; i++)
+        printf("%d ", v[i]);
+    printf("\n");
+
+    printf("\nb) Numeros distintos e quantidade de vezes:\n");
+    for (j = 0; j < nDist; j++)
+        printf("   %d -> %d vez(es)\n", distintos[j], ocorr[j]);
+
+    printf("\nc) Produtos para compra (ordem alfabetica):\n");
+    if (nProd == 0)
+        printf("   Nenhum produto cadastrado\n");
+    for (i = 0; i < nProd; i++)
+    {
+        printf("   %-20s %3d un. x R$ %.2f = R$ %.2f\n", produtos[i].nome, produtos[i].quantidade,
+               produtos[i].preco, produtos[i].quantidade * produtos[i].preco);
+        totalGeral += produtos[i].quantidade * produtos[i].preco;
+    }
+    if (nProd > 0)
+        printf("   Total estimado da compra: R$ %.2f\n", totalGeral);
+
+    printf("\nd) Numeros com ocorrencias pares (ordem decrescente): ");
+    if (nPares == 0)
+        printf("nenhum");
+    for (i = 0; i < nPares; i++)
+        printf("%d ", pares[i]);
+    printf("\n");
+
+    free(pares);
+
+    return 0;
+}
